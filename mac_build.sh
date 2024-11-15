@@ -1,11 +1,15 @@
 #!/bin/bash
 
-# --- Run Backend Docker Container in a New Terminal ---
-echo "Running backend Docker container..."
-osascript -e 'tell app "Terminal" to do script "docker run -d -p 8000:8000 llm-eval-backend && echo Backend running at http://localhost:8000 && read -p \"Press [Enter] to exit...\""'
+# --- Navigate to the backend folder and build the Docker image ---
+echo "Navigating to llm_eval_backend and building backend Docker image..."
+cd llm_eval_backend
+docker build -t llm-eval-backend .
 
-# --- Run Frontend Docker Container in a New Terminal ---
-echo "Running frontend Docker container..."
-osascript -e 'tell app "Terminal" to do script "docker run -d -p 3000:3000 llm-eval-frontend && echo Frontend running at http://localhost:3000 && read -p \"Press [Enter] to exit...\""'
+# --- Navigate to the frontend folder and build the Docker image ---
+echo "Navigating to llm_eval_frontend and building frontend Docker image..."
+cd ../llm_eval_frontend
+docker build -t llm-eval-frontend .
 
-echo "Docker containers are now running in separate terminals!"
+# --- Display message that containers are built ---
+echo "Backend and Frontend Docker images have been successfully built!"
+
