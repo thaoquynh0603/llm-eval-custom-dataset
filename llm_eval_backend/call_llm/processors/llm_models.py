@@ -61,6 +61,7 @@ class LLMModels:
         generation_config = {
             "temperature": self.temperature,
             "top_p": self.top_p,
+            "top_k": 40,
             "max_output_tokens": self.max_length,
             "response_mime_type": "text/plain",
         }
@@ -71,6 +72,12 @@ class LLMModels:
         )
         chat_session = model.start_chat(
             history=[
+                {
+                    "role": "user",
+                    "parts": [
+                        self.input_data,
+                    ],
+                },
             ]
         )
         response = chat_session.send_message(self.input_data)
@@ -92,3 +99,17 @@ class LLMModels:
         self.route_call()
         return self.response, self.response_log
     
+#test the google cloud model
+# if __name__ == "__main__":
+#     model = LLMModels(
+#         provider="googlecloud",
+#         model="gemini-1.5-flash-002",
+#         temperature=0.5,
+#         max_length=100,
+#         top_p=0.9,
+#         prompt="Please generate a response to the following input:",
+#         token=''
+#     )
+#     response, response_log = model.call_llm("What is the capital of France?")
+#     print(response)
+#     print(response_log)

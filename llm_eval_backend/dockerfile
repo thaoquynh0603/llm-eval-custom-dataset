@@ -7,8 +7,9 @@ WORKDIR /code
 
 COPY . .
 
-
 RUN pip install -r requirements.txt
+
+RUN python -m spacy download en
 
 COPY . /code./
 

@@ -27,7 +27,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-
+import { useEffect } from 'react';
 
 export default function Home() {
   const { selectedModels, prompts, file_id } = useAppContext();
@@ -65,7 +65,19 @@ export default function Home() {
 
   const [evalResults, setEvalResults] = useState<{ [key: string]: any }>({});
 
+ 
+  const [chosenEvaluationType, setChosenEvaluationType] = useState<string>('relative');
+
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
   const handleSubmit = useCallback((provider: string, prompt: string, evaluationType: string) => {
+
+    console.log('evaluationType:', evaluationType);
+
     if (!file_id) {
       console.error('File ID is required');
       return;
@@ -111,7 +123,12 @@ export default function Home() {
         console.log('Model ID_true:', model_id);
         return fetch(`http://localhost:8000/api/llm-responses?file_id=${file_id}&model_id=${model_id}&evaluation_type=${evaluationType}`);
       })
-      .then(response => response.json())
+      .then(response => {
+        if (!response.ok) {
+          return response.text().then(text => { throw new Error(text) });
+        }
+        return response.json();
+      })
       .then(data => {
         const evalResult = data;
         console.log('Result:', evalResult);
@@ -120,12 +137,12 @@ export default function Home() {
           [`${provider}-${prompt}`]: evalResult
         }));
         console.log('Result:', evalResult);
-  
       })
       .catch(error => {
-        console.error('Error:', error);
+        console.error('Error:', error.message);
       });
   }, [selectedModels, file_id]);
+
 
   return (
     <SidebarProvider>
@@ -145,7 +162,7 @@ export default function Home() {
       <div style={{ width: '100%', margin: '30px' }}>
       <div>
       <Accordion type="single" collapsible>
-        {Object.entries(selectedModels).map(([provider, config]) => (
+        {Object.keys(selectedModels).map((provider) => (
           Object.values(prompts).map((prompt, index) => (
                 <AccordionItem key={`${provider}-${index}`} value={`${provider}-${index}`}>
                     <AccordionTrigger>
@@ -160,31 +177,34 @@ export default function Home() {
                             </div>
                         </div>
                       </div>
+                      <div className="flex items-center space-x-2">
                         <div className="flex items-center space-x-2">
-                          <div>
-                            <Select onValueChange={(value) => handleSubmit(provider, prompt, value)} defaultValue="absolute">
-                            <SelectTrigger className="w-full p-2 border rounded">
-                              <SelectValue placeholder="Select evaluation type" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="absolute">Absolute</SelectItem>
-                              <SelectItem value="relative">Relative</SelectItem>
-                            </SelectContent>
-                            </Select>
-                          </div>
+                            <div>
+                            {isClient && (
+                              <select
+                              onChange={(e) => {
+                                setChosenEvaluationType(e.target.value);
+                                console.log('Chosen Evaluation Type:', e.target.value);
+                              }}
+                              className="w-full p-2 border rounded"
+                              >
+                              <option value="relative">Relative</option>
+                              <option value="absolute">Absolute</option>
+                              </select>
+                            )}
+                            </div>
                         </div>
                         <div className='mx-1'>
                         <div className="button-wrapper" onClick={() => {
                           if (file_id) {
-                          const element = document.getElementById(`evaluation-type-${provider}-${index}`) as HTMLSelectElement;
-                          const evaluationType = element ? element.value : 'absolute';
-                          handleSubmit(provider, prompt, evaluationType);
+                          handleSubmit(provider, prompt, chosenEvaluationType);
                           } else {
                           console.error('File ID is required to submit');
                           }
                         }}>
-                          <div style={{ backgroundColor: file_id ? 'black' : 'grey', color: 'white', padding: '5px 10px', borderRadius: '5px', cursor: file_id ? 'pointer' : 'not-allowed' }}>Submit</div>
+                          <div style={{ backgroundColor: file_id ? 'black' : 'grey', color: 'white', padding: '5px 10px', borderRadius: '5px', cursor: file_id ? 'pointer' : 'not-allowed' }} role="button">Submit</div>
                         </div>
+                       </div>
                       </div>
                     </div>
 
@@ -251,3 +271,5 @@ export default function Home() {
     </SidebarProvider>
   );
 }
+
+
